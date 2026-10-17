@@ -1,0 +1,6 @@
+{
+  "name": "ZUKI Fit AI",
+  "description": "ZUKI Fit AI: Bengali & English fitness app with Bangladeshi food database, nutrition calculator, workouts, weight & waist tracking, and AI fitness coach.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,204 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile, goals, and daily fitness metrics",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated user's UID"
+        },
+        "name": {
+          "type": "string",
+          "description": "User's display name"
+        },
+        "age": {
+          "type": "integer",
+          "description": "User age in years"
+        },
+        "heightCm": {
+          "type": "integer",
+          "description": "User height in centimeters"
+        },
+        "currentWeightKg": {
+          "type": "number",
+          "description": "Current body weight in kg"
+        },
+        "goalWeightKg": {
+          "type": "number",
+          "description": "Target body weight in kg"
+        },
+        "targetMonths": {
+          "type": "integer",
+          "description": "Target duration in months"
+        },
+        "streakDays": {
+          "type": "integer",
+          "description": "Consecutive active days"
+        },
+        "dailyCalorieGoal": {
+          "type": "integer",
+          "description": "Target daily caloric intake"
+        },
+        "dailyWaterGoalLiters": {
+          "type": "number",
+          "description": "Daily water consumption target in liters"
+        },
+        "dailyStepGoal": {
+          "type": "integer",
+          "description": "Daily step target"
+        },
+        "activeMinutesToday": {
+          "type": "integer",
+          "description": "Total active minutes today"
+        },
+        "waterIntakeMl": {
+          "type": "integer",
+          "description": "Water logged today in ml"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when document was created. Clients must submit FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when document was last modified. Clients must submit FieldValue.serverTimestamp()."
+        }
+      },
+      "required": ["userId", "name", "createdAt"]
+    },
+    "MealLog": {
+      "title": "MealLog",
+      "description": "Logged meal with nutritional macros",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated user's UID"
+        },
+        "foodNameEn": {
+          "type": "string",
+          "description": "Food name in English"
+        },
+        "foodNameBn": {
+          "type": "string",
+          "description": "Food name in Bengali"
+        },
+        "mealType": {
+          "type": "string",
+          "description": "Meal category (Breakfast, Lunch, Dinner, Snack)"
+        },
+        "emoji": {
+          "type": "string",
+          "description": "Food icon emoji"
+        },
+        "servingDescBn": {
+          "type": "string",
+          "description": "Serving description in Bengali"
+        },
+        "servingDescEn": {
+          "type": "string",
+          "description": "Serving description in English"
+        },
+        "calories": {
+          "type": "integer",
+          "description": "Estimated calories"
+        },
+        "protein": {
+          "type": "number",
+          "description": "Protein grams"
+        },
+        "carbs": {
+          "type": "number",
+          "description": "Carbohydrate grams"
+        },
+        "fat": {
+          "type": "number",
+          "description": "Fat grams"
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Formatted time string (e.g. 01:30 PM)"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when document was created. Clients must submit FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when document was last modified. Clients must submit FieldValue.serverTimestamp()."
+        }
+      },
+      "required": ["userId", "foodNameEn", "calories", "createdAt"]
+    },
+    "ProgressEntry": {
+      "title": "ProgressEntry",
+      "description": "Weight and waist measurement progress record",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated user's UID"
+        },
+        "weightKg": {
+          "type": "number",
+          "description": "Recorded weight in kilograms"
+        },
+        "waistInches": {
+          "type": "number",
+          "description": "Recorded waist size in inches"
+        },
+        "dateLabelBn": {
+          "type": "string",
+          "description": "Date label in Bengali"
+        },
+        "dateLabelEn": {
+          "type": "string",
+          "description": "Date label in English"
+        },
+        "notesBn": {
+          "type": "string",
+          "description": "Optional notes in Bengali"
+        },
+        "notesEn": {
+          "type": "string",
+          "description": "Optional notes in English"
+        },
+        "isSample": {
+          "type": "boolean",
+          "description": "Flag indicating demo/sample data"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when document was created. Clients must submit FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when document was last modified. Clients must submit FieldValue.serverTimestamp()."
+        }
+      },
+      "required": ["userId", "weightKg", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile document storing fitness goals and settings"
+    },
+    "/users/{userId}/meals/{mealId}": {
+      "schema": "MealLog",
+      "description": "User logged meals subcollection"
+    },
+    "/users/{userId}/progress/{progressId}": {
+      "schema": "ProgressEntry",
+      "description": "User weight and body measurement progress entries"
+    }
+  }
+}

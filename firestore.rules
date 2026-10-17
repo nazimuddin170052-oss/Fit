@@ -1,0 +1,134 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net: default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidUserProfile(data) {
+      return data.userId is string && data.userId.size() > 0 && data.userId.size() <= 128 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             (!('age' in data) || (data.age is int && data.age >= 0 && data.age <= 150)) &&
+             (!('heightCm' in data) || (data.heightCm is int && data.heightCm >= 0 && data.heightCm <= 300)) &&
+             (!('currentWeightKg' in data) || (data.currentWeightKg is number && data.currentWeightKg >= 0 && data.currentWeightKg <= 500)) &&
+             (!('goalWeightKg' in data) || (data.goalWeightKg is number && data.goalWeightKg >= 0 && data.goalWeightKg <= 500)) &&
+             (!('targetMonths' in data) || (data.targetMonths is int && data.targetMonths >= 0 && data.targetMonths <= 120)) &&
+             (!('streakDays' in data) || (data.streakDays is int && data.streakDays >= 0)) &&
+             (!('dailyCalorieGoal' in data) || (data.dailyCalorieGoal is int && data.dailyCalorieGoal >= 0 && data.dailyCalorieGoal <= 20000)) &&
+             (!('dailyWaterGoalLiters' in data) || (data.dailyWaterGoalLiters is number && data.dailyWaterGoalLiters >= 0 && data.dailyWaterGoalLiters <= 20)) &&
+             (!('dailyStepGoal' in data) || (data.dailyStepGoal is int && data.dailyStepGoal >= 0 && data.dailyStepGoal <= 200000)) &&
+             (!('activeMinutesToday' in data) || (data.activeMinutesToday is int && data.activeMinutesToday >= 0 && data.activeMinutesToday <= 1440)) &&
+             (!('waterIntakeMl' in data) || (data.waterIntakeMl is int && data.waterIntakeMl >= 0 && data.waterIntakeMl <= 20000)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             (!('updatedAt' in data) || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidMealLog(data) {
+      return data.userId is string && data.userId.size() > 0 && data.userId.size() <= 128 &&
+             data.foodNameEn is string && data.foodNameEn.size() > 0 && data.foodNameEn.size() <= 200 &&
+             (!('foodNameBn' in data) || (data.foodNameBn is string && data.foodNameBn.size() <= 200)) &&
+             (!('mealType' in data) || (data.mealType is string && data.mealType.size() <= 50)) &&
+             (!('emoji' in data) || (data.emoji is string && data.emoji.size() <= 32)) &&
+             (!('servingDescBn' in data) || (data.servingDescBn is string && data.servingDescBn.size() <= 100)) &&
+             (!('servingDescEn' in data) || (data.servingDescEn is string && data.servingDescEn.size() <= 100)) &&
+             data.calories is int && data.calories >= 0 && data.calories <= 10000 &&
+             (!('protein' in data) || (data.protein is number && data.protein >= 0 && data.protein <= 1000)) &&
+             (!('carbs' in data) || (data.carbs is number && data.carbs >= 0 && data.carbs <= 1000)) &&
+             (!('fat' in data) || (data.fat is number && data.fat >= 0 && data.fat <= 1000)) &&
+             (!('timestamp' in data) || (data.timestamp is string && data.timestamp.size() <= 50)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             (!('updatedAt' in data) || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidProgressEntry(data) {
+      return data.userId is string && data.userId.size() > 0 && data.userId.size() <= 128 &&
+             data.weightKg is number && data.weightKg >= 0 && data.weightKg <= 500 &&
+             (!('waistInches' in data) || (data.waistInches is number && data.waistInches >= 0 && data.waistInches <= 200)) &&
+             (!('dateLabelBn' in data) || (data.dateLabelBn is string && data.dateLabelBn.size() <= 100)) &&
+             (!('dateLabelEn' in data) || (data.dateLabelEn is string && data.dateLabelEn.size() <= 100)) &&
+             (!('notesBn' in data) || (data.notesBn is string && data.notesBn.size() <= 500)) &&
+             (!('notesEn' in data) || (data.notesEn is string && data.notesEn.size() <= 500)) &&
+             (!('isSample' in data) || data.isSample is bool) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             (!('updatedAt' in data) || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && request.auth.uid == userId;
+      allow list: if isSignedIn() && request.auth.uid == userId;
+
+      allow create: if isSignedIn() &&
+                       request.auth.uid == userId &&
+                       isValidId(userId) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().keys().hasAll(['userId', 'name', 'createdAt']) &&
+                       isValidUserProfile(incoming());
+
+      allow update: if isSignedIn() &&
+                       request.auth.uid == userId &&
+                       isValidId(userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidUserProfile(incoming());
+
+      allow delete: if isSignedIn() && request.auth.uid == userId;
+
+      match /meals/{mealId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+
+        allow create: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         isValidId(mealId) &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().keys().hasAll(['userId', 'foodNameEn', 'calories', 'createdAt']) &&
+                         isValidMealLog(incoming());
+
+        allow update: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         isValidId(mealId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidMealLog(incoming());
+
+        allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(mealId);
+      }
+
+      match /progress/{progressId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+
+        allow create: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         isValidId(progressId) &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().keys().hasAll(['userId', 'weightKg', 'createdAt']) &&
+                         isValidProgressEntry(incoming());
+
+        allow update: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         isValidId(progressId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidProgressEntry(incoming());
+
+        allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(progressId);
+      }
+    }
+  }
+}
